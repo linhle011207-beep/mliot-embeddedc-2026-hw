@@ -1,0 +1,59 @@
+Task 1
+1.1
+CMake:
+Dùng để đọc file CMakwLists.txt và tạo hệ thống build.
+
+Ninja:
+Dùng để thực hiện quá trình build dự án trên các file do CMake tạo ra.
+
+Compiler (arm-none-eabi-gcc):
+Biên dịch mã nguồn C thành các file đối tượng (.o) và tạo chương trình thực thi.
+
+STM32_Programmer_CLI:
+Nạp firmware xuống vi điều khiển STM32 và có thể reset chip sau khi nạp.
+
+1.2
+Thứ tự hoạt động:
+Code C -> CMake -> Ninja -> Compiler -> Linker -> Firmware (.bin/.elf) -> STM32_Programmer_CLI -> STM32 chạy chương trình
+Đầu tiên CMake đọc cấu hình dự án và sinh các file build cho Ninja. Ninja điều khiển Compiler biên dịch mã nguồn và Linker tạo ra file firmware. Cuối cùng STM32_Programmer_CLI nạp firmware xuống vi điều khiển STM32 và reset chip để chạy chương trình.
+
+TASk 2
+
+2.1
+Trong quá trình biên dịch, Compiler chỉ dịch từng file nguồn .c thành các file đối tượng .o riêng lẻ. Mỗi file .o chỉ chứa mã máy của một phần chương trình và vẫn chưa được liên kết với các file khác. Các địa chỉ bộ nhớ của các biến và hàm được xác định hoàn chỉnh, đồng thời các lời gọi hàm ở file khác vẫn chưa được giải quyết.
+Vì vậy chúng ta chưa thể nạp trực tiếp các file .o xuống chip mà bắt buộc phải sử dụng Linker. Linker có nhiệm vụ ghép tất cả các file .o cùng với các thư viện cần thiết, giải quyết các tham chiếu giứa các hàm và biến, sắp xếp dữ liệu thao sơ đồ bộ nhớ của vi điều khiển và tạo ra chương trình hoàn chỉnh.
+File .bin do Linker tạo ra là một filr nhị phân hoàn chỉnh, đã được sắp xếp đúng theo địa chỉ nhớ của vi điều khiển và có thể nạp trực tiếp xuống chip thực thi. Trong khi đó, các file .o chỉ là các phần mã máy riêng lẻ, chưa hoàn chỉnh và không thể chạy độc lập.
+
+2.2
+Incremental Build giúp giảm đáng kể thời gian biên dịch khi dự án có nhiều file nguồn. Thay vì biên dịch lại toàn bộ dự án sau mỗi lần chỉnh sửa, Ninja chỉ biên dịch lại những file đã thay đổi và sau đó thực hiện liên kết (Link) lại chương trình.
+Ninja xác định file cần biên dịch bằng cách kiểm tra thời gian chỉnh sửa (timestamp) của các file nguồn thông tin về các quan hệ phụ thuộv (dêpndency) do CMacke tạo ra. Nếu 1 file .c được sửa đổi hoặc 1 file phụ thuộc thay đổi, Ninja sẽ chỉ biên dịch lại những file liên quan thay vì toàn bộ dự án. Điều này giúp rút ngắn đáng kể thời gian build, đặc biệt đối với các dự án có hàng trăm file nguồn.
+
+TASK 3
+
+3.1
+Vùng .data chứa các biến toàn cục hoặc biến tĩnh có giá trị khởi tạo. Các giá trị khởi tạo này được lưu trong bộ nhớ flash để k bị mất khi tắt nguồn, nhưng khi chương trình chạy thì chúng phải được đặt trong RAM để CPU có thể truy cập và thay đổi.
+LMA (Load Memory Address) là địa chỉ lưu dữ liệu trong Flash. Trong đoạn Linker Script, _sidata là địa chỉ bắt đầu của vùng .data trong Flash.
+VMA (Vỉtual/Runtime Memory Address) là địa chỉ của vùng .data khi chương trình đang chạy trong RAM. Trong Linker Script, _sdata là địa chỉ bắt đầu và _edata là địa chỉ kết thúc của vùng .dât trong RAM.
+Vùng .data cần có cả LMA và VMA vì dữ liệu phải được lưu lâu dài trong Flash nhưng phải đựo sao chép sang RAM trước khi chương trình thực thi để CPU có thể đọc và ghi dữ liệu.
+
+3.2
+Nếu Startup Code hoặc Reset_Handler không sao chép dữ liệu từ _sidata trong Flash sang _sdata trong RAM thì các biến toàn cục có giá trị khởi tạo sẽ không nhận được giá trị ban đầu của chúng.
+Khi đó CPU sẽ đọc các biến này trong RAM nhưng vùng nhớ RAM chưa được khởi tạo nên chúng có thể chứa giá trị không xác định. Diều này làm cho chương trình hoạt động không đúng như mong muốn, các phép tính có thể sai, điểu kiện kiểm tra có thể không chính xác và trong nhiều trường hợp chương trình có thể bị lỗi hoặc hoạt động không ổn định
+ 
+ TASK 4
+
+4.1
+ Câu lệnh:
+
+ cmake -S . -B build -G Ninja
+
+ Giải thích:
+ -S . chỉ định thư mục mã nguồn là thư mục hiện tại.
+ -B build chỉ định thư mục build để chứa các file trung gian và file đầu ra.
+ -G Ninja yêu cầu CMake sử dụng Ninja làm Generator để tạo hệ thống build.
+
+ 4.2
+ câu lệnh:
+  ninja -C build
+  Giải thích:
+  Lệnh này yêu cầu Ninja chuyển đến thư mục buid và bắt dầu biên dịch dự án trên các file cấu hình đã được CMake tạo ra.
