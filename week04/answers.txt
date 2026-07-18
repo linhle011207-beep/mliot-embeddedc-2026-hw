@@ -1,0 +1,26 @@
+TASK 1
+
+1.1 Cơ chế hoạt động của GPIO Output Push-Pull
+Một chân GPIO ở chế độ Output Push-Pull sử dụng 2 transistor bổ sung là PMOS và NMOS để điều khiển điện áp đầu ra.
+-Khi ghi mức logic 1 (3.3V):
++ Transistor PMOS dẫn (ON)
++ Transistor NMOS ngắt (OFF)
++ Chân GPIO được nối trực tiếp lên nguồn VDD nên điện áp đầu ra xấp xỉ 3.3V.
+
+-Khi ghi mức logic 0 (0V):
++ Transitor PMOS ngắt (OFF).
++ Transistor NMOS dẫn (ON).
++ Chân GPIO được nối xuống GND nên điện áp đầu ra xấp xỉ 0V.
+Ở chế độ Push-Pull, tại 1 thời điểm chỉ có 1 transistor được bật để tránh tạo đường ngắn mạch từ VDD xuống GND. Nhờ đó chân GPIO có thể vừa cấp dòng (source curent) vừa hút dòng (sink curent), tạo mức logic ổn định và chuyển mức nhanh.
+
+1.2 Chế độ Input Pull-up và hiện tượng Floating
+
+Chế độ Input Pull-up được sử dụng khi chân GPIO cần đọc thêm tín hiệu từ các thiết bị như nút nhấn hoặc công tắc nhưng có thể có thời điểm không được kết nối. Điện trở Pull-up nội sẽ kéo chân GPIO lên mức logic 1 khi k có tín hiệu bên ngoài, giúp tránh trạng thái k xác định.
+Nếu chân GPIO được cấu hình là Input nhưng ở trạng thái Floating (không Pull-up, Pull-down) và k kết nối với bất kì nguồn tín hiệu điện áp trên chân sẽ k ổn định. Chân có thể nhiễu từ môi trường, khiến thanh ghi dữ liệu đầu vào (GPIOx_IDR) đọc được lúc là 0, lúc là 1 một cách ngẫu nhiên. Hiện tượng này được gọi là Floating Input và có thể làm ctr hoạt động sai hoặc phát sinh tín hiệu giả.
+
+TASK 2
+
+Tầm quan trọng của Peripheral Clock
+Sau khi vi điều khiển Reset, ST mặc định tắt Clock của hầu hết các ngoại vi nhằm giảm tiêu thụ điện năng, hạn chế hoạt động không cần thiết và chỉ kích hoạt những ngoại vi mà chương trình thực sự sử dụng. Cách thiết kế này giúp tiết kiệm năng lượng và tăng hiệu quả sử dụng tài nguyên của vi điều khiển.
+Trước khi cấu hình một ngoại vi như GPIO, chương trình phải bật Clock cho ngoại vi đó thông qua thanh ghi RCC (ví dụ: __HAL_RCC_GPIOC_CLK_ENABLE()).
+Nếu quên bật Clock mà vẫn ghi vào các thanh ghi cấu hình GPIO (MODER, CRL, CRH, ODR, IDR...), các thanh ghi sẽ không hoạt động đúng vì ngoại vi chưa được cấp xung nhịp. Kết quả là việc cấu hình không có hiệu lực, GPIO không thể đọc hoặc xuất tín hiệu và chương trình sẽ không hoạt động như mong muốn.
