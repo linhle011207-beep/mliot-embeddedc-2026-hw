@@ -24,3 +24,5 @@ Tầm quan trọng của Peripheral Clock
 Sau khi vi điều khiển Reset, ST mặc định tắt Clock của hầu hết các ngoại vi nhằm giảm tiêu thụ điện năng, hạn chế hoạt động không cần thiết và chỉ kích hoạt những ngoại vi mà chương trình thực sự sử dụng. Cách thiết kế này giúp tiết kiệm năng lượng và tăng hiệu quả sử dụng tài nguyên của vi điều khiển.
 Trước khi cấu hình một ngoại vi như GPIO, chương trình phải bật Clock cho ngoại vi đó thông qua thanh ghi RCC (ví dụ: __HAL_RCC_GPIOC_CLK_ENABLE()).
 Nếu quên bật Clock mà vẫn ghi vào các thanh ghi cấu hình GPIO (MODER, CRL, CRH, ODR, IDR...), các thanh ghi sẽ không hoạt động đúng vì ngoại vi chưa được cấp xung nhịp. Kết quả là việc cấu hình không có hiệu lực, GPIO không thể đọc hoặc xuất tín hiệu và chương trình sẽ không hoạt động như mong muốn.
+task 5 (Điều khiển qua Firmware)
+https://drive.google.com/file/d/10EDLmm6gaZA9EDuufsdfl7-9gJFSWDxQ/view?usp=sharing
